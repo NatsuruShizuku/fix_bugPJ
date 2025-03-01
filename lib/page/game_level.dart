@@ -1,76 +1,44 @@
-// // gamelevel.dart
-// import 'package:flutter/material.dart';
-// import 'package:flutter_application_0/page/game_page.dart';
-
-// class GameLevel extends StatelessWidget {
-//   final bool hasImage; // รับค่าจาก SelectGame
-//   const GameLevel({super.key, required this.hasImage});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: const Text('เลือกระดับเกม')),
-      
-//       body: GridView.builder(
-//         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-//           crossAxisCount: 2,
-//           childAspectRatio: 1.5,
-//           crossAxisSpacing: 10,
-//           mainAxisSpacing: 10,
-//         ),
-//         padding: const EdgeInsets.all(10),
-//         itemCount: 8, // 2x2 ถึง 2x9
-//         itemBuilder: (context, index) {
-//           final level = index + 2; // 2x2, 2x3, ..., 2x9
-//           return _buildLevelButton(context, '2x$level', 2, level);
-//         },
-//       ),
-//     );
-//   }
-
-//   Widget _buildLevelButton(
-//       BuildContext context, String label, int rows, int columns) {
-//     return ElevatedButton(
-//       onPressed: () {
-//         Navigator.push(
-//           context,
-//           MaterialPageRoute(
-//             builder: (context) => GamePage(rows: rows, columns: columns,hasImage: hasImage,),
-//           ),
-//         );
-//       },
-//       style: ElevatedButton.styleFrom(
-//         padding: const EdgeInsets.all(20), // ระยะห่างภายในปุ่ม
-//         textStyle: const TextStyle(fontSize: 20), // ขนาดตัวอักษร
-//       ),
-//       child: Text(label),
-//     );
-//   }
-// }
 
 import 'package:flutter/material.dart';
 import 'package:flutter_application_0/page/game_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GameLevel extends StatelessWidget {
-  final bool hasImage; // รับค่าจาก SelectGame
-  const GameLevel({super.key, required this.hasImage});
+  // final bool hasImage; // รับค่าจาก SelectGame
+  // const GameLevel({super.key, required this.hasImage});
+  const GameLevel({super.key});
+
+  // ฟังก์ชันสำหรับดึงสถานะของด่านจาก SharedPreferences
+  Future<bool> _getLevelCompletionStatus(int rows, int columns) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('level_${rows}x${columns}') ?? false;
+  }
 
   @override
   Widget build(BuildContext context) {
-    // รายการระดับเกมที่ต้องการแสดง (6 รายการ)
     final List<Map<String, int>> levelSettings = [
-      {'rows': 2, 'columns': 2}, //4
-      {'rows': 2, 'columns': 3}, //6
-      {'rows': 2, 'columns': 4}, //8
-      {'rows': 3, 'columns': 4}, //12
-      {'rows': 4, 'columns': 4}, //16
-      {'rows': 4, 'columns': 5}, //20
+      {'rows': 2, 'columns': 2}, // 4 tiles
+      {'rows': 2, 'columns': 3}, // 6 tiles
+      {'rows': 2, 'columns': 4}, // 8 tiles
+      {'rows': 3, 'columns': 4}, // 12 tiles
+      {'rows': 4, 'columns': 4}, // 16 tiles
+      // เพิ่มได้ตามต้องการ
+    ];
+
+    // กำหนดชุดสีให้แต่ละปุ่ม (ถ้ามีปุ่มมากกว่าจำนวนสี จะวนกลับ)
+    final List<Color> buttonColors = [
+      Colors.redAccent,
+      Colors.pinkAccent,
+      Colors.blueAccent,
+      Colors.orangeAccent,
+      Colors.purpleAccent,
     ];
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('เลือกระดับเกม'),
-        backgroundColor: Colors.deepPurple,
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.blueAccent,
         elevation: 4,
       ),
       body: Container(
@@ -85,8 +53,8 @@ class GameLevel extends StatelessWidget {
           builder: (context, constraints) {
             // กำหนดให้ Grid แสดงผลเป็น 2 คอลัมน์
             const int crossAxisCount = 2;
-            final int totalItems = levelSettings.length; // จำนวนรายการ 6
-            final int rowCount = (totalItems / crossAxisCount).ceil(); // จำนวนแถว = 3
+            final int totalItems = levelSettings.length; // จำนวนรายการ
+            final int rowCount = (totalItems / crossAxisCount).ceil(); // จำนวนแถว
 
             // กำหนด spacing ระหว่างปุ่ม
             const double crossAxisSpacing = 10;
@@ -118,11 +86,14 @@ class GameLevel extends StatelessWidget {
               itemBuilder: (context, index) {
                 final level = levelSettings[index];
                 final label = '${level['rows']}x${level['columns']}';
+                // เลือกสีจาก buttonColors โดยวนกลับตาม index
+                final Color buttonColor = buttonColors[index % buttonColors.length];
                 return _buildLevelButton(
-                  context, 
-                  label, 
-                  level['rows']!, 
-                  level['columns']!
+                  context,
+                  label,
+                  level['rows']!,
+                  level['columns']!,
+                  buttonColor,
                 );
               },
             );
@@ -132,33 +103,184 @@ class GameLevel extends StatelessWidget {
     );
   }
 
-  Widget _buildLevelButton(
-      BuildContext context, String label, int rows, int columns) {
-    return ElevatedButton(
-      onPressed: () {
+//   Widget _buildLevelButton(
+//     BuildContext context,
+//     String label,
+//     int rows,
+//     int columns,
+//     Color buttonColor,
+//   ) {
+//     return ElevatedButton(
+//       onPressed: () async {
+//         // เรียกใช้ GamePage และส่งค่าระดับที่เลือกไป
+//         Navigator.push(
+//           context,
+//           MaterialPageRoute(
+//             builder: (context) => GamePage(
+//               rows: rows,
+//               columns: columns,
+//               // hasImage: hasImage,
+//             ),
+//           ),
+//         );
+//       },
+//       style: ElevatedButton.styleFrom(
+//         backgroundColor: buttonColor,
+//         foregroundColor: Colors.black87,
+//         elevation: 8,
+//         shadowColor: Colors.black54,
+//         shape: RoundedRectangleBorder(
+//           borderRadius: BorderRadius.circular(15),
+//         ),
+//         padding: const EdgeInsets.all(20),
+//       ),
+//       child: FutureBuilder<bool>(
+//         future: _getLevelCompletionStatus(rows, columns),
+//         builder: (context, snapshot) {
+//           // หากยังไม่มีข้อมูล ให้ถือว่ายังไม่ผ่าน
+//           bool isComplete = snapshot.data ?? false;
+//           return Column(
+//             mainAxisAlignment: MainAxisAlignment.center,
+//             children: [
+//               Text(
+//                 label,
+//                 style: const TextStyle(
+//                   fontSize: 22,
+//                   fontWeight: FontWeight.bold,
+//                   color: Colors.white,
+//                 ),
+//               ),
+//               const SizedBox(height: 8),
+//               // แสดงดาว 3 ดวง โดยใช้ Row และ List.generate
+//               Row(
+//                 mainAxisAlignment: MainAxisAlignment.center,
+//                 children: List.generate(
+//                   3,
+//                   (index) => Icon(
+//                     isComplete ? Icons.star : Icons.star_border,
+//                     size: 30,
+//                     color: isComplete ? Colors.yellow : Colors.white70,
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           );
+//         },
+//       ),
+//     );
+//   }
+// }
+Widget _buildLevelButton(
+  BuildContext context,
+  String label,
+  int rows,
+  int columns,
+  Color buttonColor,
+) {
+  return Container(
+    decoration: BoxDecoration(
+      borderRadius: BorderRadius.circular(15),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black54,
+          blurRadius: 8,
+          offset: Offset(0, 4),
+        ),
+      ],
+    ),
+    child: ElevatedButton(
+      onPressed: () async {
         Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => GamePage(
               rows: rows,
               columns: columns,
-              hasImage: hasImage,
             ),
           ),
         );
       },
       style: ElevatedButton.styleFrom(
-        foregroundColor: Colors.deepPurple,
-        backgroundColor: Colors.white,
-        elevation: 8,
-        shadowColor: Colors.black54,
+        padding: EdgeInsets.zero,
+        backgroundColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(15),
         ),
-        padding: const EdgeInsets.all(20),
-        textStyle: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        elevation: 0,
       ),
-      child: Text(label),
-    );
-  }
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(15),
+          image: DecorationImage(
+            image: AssetImage('assets/images/button6.png'),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(
+              buttonColor.withOpacity(0.6),
+              BlendMode.multiply,
+            ),
+          ),
+        ),
+        child: FutureBuilder<bool>(
+          future: _getLevelCompletionStatus(rows, columns),
+          builder: (context, snapshot) {
+            bool isComplete = snapshot.data ?? false;
+            return Stack(
+              children: [
+                // ข้อความและดาว
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          shadows: [
+                            Shadow(
+                              color: Colors.black,
+                              blurRadius: 5,
+                              offset: Offset(1, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(
+                          3,
+                          (index) => Icon(
+                            isComplete ? Icons.star : Icons.star_border,
+                            size: 34,
+                            color: isComplete ? Colors.amber : Colors.white70,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Overlay สี
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.black.withOpacity(0.3),
+                        Colors.transparent,
+                      ],
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    ),
+  );
+}
 }

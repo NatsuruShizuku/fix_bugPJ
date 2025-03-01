@@ -1,4 +1,164 @@
-import 'dart:math';
+// import 'dart:math';
+// import 'dart:typed_data';
+
+// import 'package:flutter/material.dart';
+// import 'package:flutter_application_0/animation/flip_animation.dart';
+// import 'package:flutter_application_0/animation/matched_animation.dart';
+// import 'package:flutter_application_0/animation/spin_animation.dart';
+// import 'package:flutter_application_0/managers/game_manager.dart';
+// import 'package:flutter_application_0/models/word.dart';
+// import 'package:provider/provider.dart';
+
+// class WordTile extends StatefulWidget {
+//   const WordTile({
+//     required this.index,
+//     required this.word,
+//     Key? key,
+//     required this.hasImage,
+//     required this.isMatched,
+//   }) : super(key: key);
+
+//   final int index;
+//   final Word word;
+//   final bool hasImage;
+//   final bool isMatched;
+
+//   @override
+//   State<WordTile> createState() => _WordTileState();
+// }
+
+// class _WordTileState extends State<WordTile> with AutomaticKeepAliveClientMixin {
+//   @override
+//   bool get wantKeepAlive => true; // รักษาสถานะ Widget
+
+//   @override
+//   Widget build(BuildContext context) {
+//     super.build(context); // ต้องเรียก super.build
+//     debugPrint('WordTile at index ${widget.index} rebuilt');
+//     return SpinAnimation(
+//       key: ValueKey<int>(widget.index),
+//       child: Consumer<GameManager>(
+//         builder: (context, notifier, child) {
+//           if (widget.isMatched) {
+//             // หากการ์ดจับคู่ถูกต้อง ให้แสดงผลแบบคงที่
+//             return Container(
+//               decoration: BoxDecoration(
+//                 color: Colors.green.withOpacity(0.5),
+//                 borderRadius: BorderRadius.circular(8),
+//               ),
+//               child: Center(
+//                 child: Icon(
+//                   Icons.check,
+//                   size: 40,
+//                   color: Colors.white,
+//                 ),
+//               ),
+//             );
+//           }
+
+//           bool animate = checkAnimationRun(notifier);
+
+//           return GestureDetector(
+//             onTap: () {
+//               if (!notifier.ignoreTaps &&
+//                   !notifier.answeredWords.contains(widget.index) &&
+//                   !notifier.tappedWords.containsKey(widget.index)) {
+//                 notifier.tileTapped(index: widget.index, word: widget.word);
+//               }
+//             },
+//              onDoubleTap: widget.hasImage && widget.word.contents.isNotEmpty
+//                 ? () => _showFullImage(context, widget.word.contents)
+//                 : null,
+//             child: FlipAnimation(
+//               word: MatchedAnimation(
+//                 numberOfWordsAnswered: notifier.answeredWords.length,
+//                 animate: notifier.answeredWords.contains(widget.index),
+//                 child: Container(
+//                   padding: const EdgeInsets.all(16),
+//                   child: _buildImage(),
+//                 ),
+//               ),
+//               // animate: checkAnimationRun(notifier),
+//               animate: animate,
+//               reverse: notifier.reverseFlip,
+//               animationCompleted: (isForward) {
+//                 notifier.onAnimationCompleted(isForward: isForward);
+//               },
+//             ),
+//           );
+//         },
+
+//       ),
+//     );
+//   }
+//   void _showFullImage(BuildContext context, List<int> imageBytes) {
+//     showDialog(
+//       context: context,
+//       builder: (context) => ImageDialog(imageBytes: imageBytes),
+//     );
+//   }
+  
+//   Widget _buildImage() {
+//     return ClipRRect(
+//       borderRadius: BorderRadius.circular(8),
+//       child: Container(
+//         decoration: BoxDecoration(
+//           border: Border.all(color: Colors.white, width: 2),
+//         ),
+//         child: Image.memory(
+//           Uint8List.fromList(widget.word.contents),
+//           fit: BoxFit.cover,
+//         ),
+//       ),
+//     );
+//   }
+
+//   bool checkAnimationRun(GameManager notifier) {
+//     bool animate = false;
+
+//     if (notifier.canFlip) {
+//       if (notifier.tappedWords.isNotEmpty &&
+//           notifier.tappedWords.keys.last == widget.index) {
+//         animate = true;
+//       }
+//       if (notifier.reverseFlip && !notifier.answeredWords.contains(widget.index)) {
+//         animate = true;
+//       }
+//     }
+//     return animate;
+//   }
+//   }
+
+// class ImageDialog extends StatelessWidget {
+//   final List<int> imageBytes;
+//   const ImageDialog({super.key, required this.imageBytes});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Dialog(
+//       backgroundColor: Colors.transparent,
+//       insetPadding: const EdgeInsets.all(20),
+//       child: GestureDetector(
+//         onTap: () => Navigator.of(context).pop(),
+//         child: InteractiveViewer(
+//           panEnabled: true,
+//           minScale: 0.5,
+//           maxScale: 4.0,
+//           child: Container(
+//             decoration: BoxDecoration(
+//               borderRadius: BorderRadius.circular(16),
+//               image: DecorationImage(
+//                 image: MemoryImage(Uint8List.fromList(imageBytes)),
+//                 fit: BoxFit.contain,
+//               ),
+//             ),
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }
+
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -9,95 +169,122 @@ import 'package:flutter_application_0/managers/game_manager.dart';
 import 'package:flutter_application_0/models/word.dart';
 import 'package:provider/provider.dart';
 
-class WordTile extends StatelessWidget {
+class WordTile extends StatefulWidget {
   const WordTile({
     required this.index,
     required this.word,
+    // required this.hasImage,
+    required this.isMatched,
     Key? key,
-    required this.hasImage,
   }) : super(key: key);
 
   final int index;
   final Word word;
-  final bool hasImage;
+  // final bool hasImage;
+  final bool isMatched;
+
+  @override
+  State<WordTile> createState() => _WordTileState();
+}
+
+class _WordTileState extends State<WordTile> {
+  bool _isCardFlipped = false;
 
   @override
   Widget build(BuildContext context) {
     return SpinAnimation(
+      key: ValueKey<int>(widget.index),
       child: Consumer<GameManager>(
         builder: (_, notifier, __) {
+          if (widget.isMatched) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.check,
+                  size: 40,
+                  color: Colors.white,
+                ),
+              ),
+            );
+          }
+
           bool animate = checkAnimationRun(notifier);
 
- 
-return GestureDetector(
-  onTap: () {
-    if (!notifier.ignoreTaps &&
-        !notifier.answeredWords.contains(index) &&
-        !notifier.tappedWords.containsKey(index)) {
-      notifier.tileTapped(index: index, word: word);
-    }
-  },
-  child: FlipAnimation(
-    word: MatchedAnimation(
-      numberOfWordsAnswered: notifier.answeredWords.length,
-      animate: notifier.answeredWords.contains(index),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        child: word.displayText || !hasImage
-            ? _buildText()
-            : _buildImage(),
-      ),
-    ),
-    animate: checkAnimationRun(notifier),
-    reverse: notifier.reverseFlip,
-    animationCompleted: (isForward) {
-      notifier.onAnimationCompleted(isForward: isForward);
-    },
-  ),
-);
-          
+          return GestureDetector(
+            onTap: () {
+              if (!notifier.ignoreTaps &&
+                  !notifier.answeredWords.contains(widget.index) &&
+                  !notifier.tappedWords.containsKey(widget.index)) {
+                notifier.tileTapped(index: widget.index, word: widget.word);
+              }
+            },
+            onDoubleTap: () {
+              // if (widget.hasImage &&
+                if( widget.word.contents.isNotEmpty &&
+                  _isCardFlipped) { // ตรวจสอบการ์ดหงาย
+                _showFullImage(context, widget.word.contents);
+              }
+            },
+            child: FlipAnimation(
+              word: MatchedAnimation(
+                numberOfWordsAnswered: notifier.answeredWords.length,
+                animate: notifier.answeredWords.contains(widget.index),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  child: _buildImage(),
+                ),
+              ),
+              animate: animate,
+              reverse: notifier.reverseFlip,
+              animationCompleted: (isForward) {
+                notifier.onAnimationCompleted(isForward: isForward);
+              },
+              onFlipStateChanged: (isFront) {
+                setState(() {
+                  _isCardFlipped = isFront; // อัปเดตสถานะการหงาย
+                });
+              },
+            ),
+          );
         },
       ),
     );
   }
 
-  Widget _buildText() {
-    return FittedBox(
-      child: Transform(
-        alignment: Alignment.center,
-        transform: Matrix4.rotationY(pi),
-        child: Text(word.descrip),
+  void _showFullImage(BuildContext context, List<int> imageBytes) {
+    showDialog(
+      context: context,
+      builder: (context) => ImageDialog(imageBytes: imageBytes),
+    );
+  }
+
+  Widget _buildImage() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.white, width: 2),
+        ),
+        child: Image.memory(
+          Uint8List.fromList(widget.word.contents),
+          fit: BoxFit.cover,
+        ),
       ),
     );
   }
 
-  // Widget _buildImage() {
-  //   return Image.memory(
-  //     Uint8List.fromList(word.contents),
-  //     fit: BoxFit.contain,
-  //   );
-  // }
-  Widget _buildImage() {
-  try {
-    return Image.memory(
-      Uint8List.fromList(word.contents), // ตรวจสอบว่า word.contents ไม่ว่างเปล่า
-      fit: BoxFit.contain,
-    );
-  } catch (e) {
-    print('เกิดข้อผิดพลาดในการโหลดรูปภาพ: $e');
-    return const Icon(Icons.error); // แสดงไอคอนข้อผิดพลาดหากโหลดรูปภาพไม่สำเร็จ
-  }
-}
-
   bool checkAnimationRun(GameManager notifier) {
     bool animate = false;
-
     if (notifier.canFlip) {
       if (notifier.tappedWords.isNotEmpty &&
-          notifier.tappedWords.keys.last == index) {
+          notifier.tappedWords.keys.last == widget.index) {
         animate = true;
       }
-      if (notifier.reverseFlip && !notifier.answeredWords.contains(index)) {
+      if (notifier.reverseFlip && !notifier.answeredWords.contains(widget.index)) {
         animate = true;
       }
     }
@@ -105,4 +292,32 @@ return GestureDetector(
   }
 }
 
-// }
+class ImageDialog extends StatelessWidget {
+  final List<int> imageBytes;
+  const ImageDialog({super.key, required this.imageBytes});
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(20),
+      child: GestureDetector(
+        onTap: () => Navigator.of(context).pop(),
+        child: InteractiveViewer(
+          panEnabled: true,
+          minScale: 0.5,
+          maxScale: 4.0,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              image: DecorationImage(
+                image: MemoryImage(Uint8List.fromList(imageBytes)),
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
