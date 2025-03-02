@@ -85,7 +85,7 @@ void _navigateToPage(String buttonType) async {
                       child: Stack(
                         children: [
                           Image.asset(
-                            'assets/images/sun.png',
+                            'assets/images/sign4.png',
                             width: screenSize.width * 0.925,
                             height: screenSize.height * 0.25,
                             fit: BoxFit.contain,
@@ -99,7 +99,7 @@ void _navigateToPage(String buttonType) async {
                                 Text(
                                   "เกม",
                                   style: GoogleFonts.chakraPetch(
-                                    color: Colors.white,
+                                    color: Colors.black,
                                     fontSize: screenSize.width * 0.08,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -107,7 +107,7 @@ void _navigateToPage(String buttonType) async {
                                 Text(
                                   "จับคู่คำศัพท์",
                                   style: GoogleFonts.chakraPetch(
-                                    color: Colors.white,
+                                    color: Colors.black,
                                     fontSize: screenSize.width * 0.08,
                                     fontWeight: FontWeight.bold,
                                   ),
