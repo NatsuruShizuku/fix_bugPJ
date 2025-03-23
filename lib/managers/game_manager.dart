@@ -1,8 +1,7 @@
-// import 'dart:async';
-
 // import 'package:flutter/material.dart';
 // import 'package:flutter_application_0/managers/audio_manager.dart';
 // import 'package:flutter_application_0/models/word.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 
 
 // class GameManager extends ChangeNotifier {
@@ -12,87 +11,59 @@
 //       ignoreTaps = false,
 //       roundCompleted = false;
 //   List<int> answeredWords = [];
-//   bool hasImage;
-//   final int totalTiles;
-//   int moves = 0;
-//   int secondsElapsed = 0;
-//   // late Timer _timer;
-  
-//     GameManager( {required this.hasImage,required this.totalTiles}){
-//     // _startTimer(); // เริ่มจับเวลาทันทีเมื่อสร้าง GameManager
-//   }
+//  final int totalTiles;
 
-// // void _startTimer() {
-// //   _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-// //     secondsElapsed++;
-// //     notifyListeners(); // เรียกเพียงครั้งเดียวต่อวินาที
-// //   });
-// // }
+//   GameManager({required this.totalTiles});
 
-// //  void stopTimer() {
-// //     _timer.cancel();
-// //   }
-//   // tileTapped({required int index, required Word word}) {
-//   //   ignoreTaps = true;
-//   //   if (tappedWords.length <= 1) {
-//   //     tappedWords.addEntries([MapEntry(index, word)]);
-//   //     canFlip = true;
-//   //   } else {
-//   //     canFlip = false;
-//   //   }
-
-//   //   notifyListeners();
-//   // }
 //   tileTapped({required int index, required Word word}) {
-//     moves++;
-//   ignoreTaps = true;
-//   if (tappedWords.length <= 1) {
-//     tappedWords.addEntries([MapEntry(index, word)]);
-//     canFlip = true;
-//   } else {
-//     canFlip = false;
+//     ignoreTaps = true;
+//     if (tappedWords.length <= 1) {
+//       tappedWords.addEntries([MapEntry(index, word)]);
+//       canFlip = true;
+//     } else {
+//       canFlip = false;
+//     }
+
+//     notifyListeners();
 //   }
-//   notifyListeners();
+
+// Future<void> _updatePersistentMatchedPairs(int delta) async {
+//   final prefs = await SharedPreferences.getInstance();
+//   int currentTotal = prefs.getInt('persistentMatchedPairs') ?? 0;
+//   await prefs.setInt('persistentMatchedPairs', currentTotal + delta);
 // }
 
-// @override
-//   void dispose() {
-//     // _timer.cancel();
-//     super.dispose();
-//   }
-
-// onAnimationCompleted({required bool isForward}) async {
-//   if (tappedWords.length == 2) {
-//     if (isForward) {
-//       bool isMatch = tappedWords.entries.elementAt(0).value.matraID == tappedWords.entries.elementAt(1).value.matraID;
-
-//       if (isMatch) {
-//         answeredWords.addAll(tappedWords.keys);
-//         if (answeredWords.length == totalTiles) {
-//           await AudioManager().playAudio('Round');
-//           roundCompleted = true;
+//   onAnimationCompleted({required bool isForward}) async {
+//     if (tappedWords.length == 2) {
+//       if (isForward) {
+//         if (tappedWords.entries.elementAt(0).value.matraID == 
+//               tappedWords.entries.elementAt(1).value.matraID) {
+//           answeredWords.addAll(tappedWords.keys);
+//           if (answeredWords.length == 6) {
+//             await AudioManager.playAudio('Round');
+//             roundCompleted = true;
+//           } else {
+//             await AudioManager.playAudio('Correct');
+//           }
+//           tappedWords.clear();
+//           canFlip = true;
+//           ignoreTaps = false;
 //         } else {
-//           await AudioManager().playAudio('Correct');
+//           await AudioManager.playAudio('Incorrect');
+//           reverseFlip = true;
 //         }
-//         tappedWords.clear(); // เคลียร์ tappedWords เมื่อจับคู่ถูก
-//         canFlip = true;
-//         ignoreTaps = false;
 //       } else {
-//         await AudioManager().playAudio('Incorrect');
-//         reverseFlip = true; // ตั้งค่า reverseFlip เพื่อพลิกกลับ
+//         reverseFlip = false;
+//         tappedWords.clear();
+//         ignoreTaps = false;
 //       }
 //     } else {
-//       reverseFlip = false;
-//       tappedWords.clear(); // เคลียร์ tappedWords เมื่อพลิกกลับเสร็จ
-//       canFlip = true;
+//       canFlip = false;
 //       ignoreTaps = false;
 //     }
-//   } else {
-//     canFlip = false;
-//     ignoreTaps = false;
+
+//     notifyListeners();
 //   }
-//   notifyListeners();
-// }
 // }
 
 
@@ -152,16 +123,16 @@ class GameManager extends ChangeNotifier {
           await _updatePersistentMatchedPairs(1);
 
           if (answeredWords.length == totalTiles) {
-            await AudioManager().playAudio('Round');
+            await AudioManager.playAudio('Round');
             roundCompleted = true;
           } else {
-            await AudioManager().playAudio('Correct');
+            await AudioManager.playAudio('Correct');
           }
           tappedWords.clear(); // เคลียร์ข้อมูลเมื่อจับคู่ถูกต้อง
           canFlip = true;
           ignoreTaps = false;
         } else {
-          await AudioManager().playAudio('Incorrect');
+          await AudioManager.playAudio('Incorrect');
           reverseFlip = true; // ตั้งค่า reverseFlip เพื่อพลิกกลับเมื่อจับคู่ไม่ถูกต้อง
         }
       } else {

@@ -1,31 +1,46 @@
 // class Word {
-//   final String text;
-//   final String url;
-//   bool displayText;
+//   final int? id;
+//   final String descrip;
+//   final List<int> contents;
+//   final int matraID;
 
-//   Word({required this.text, required this.url, required this.displayText});
+//   Word({
+//     this.id,
+//     required this.descrip,
+//     required this.contents,
+//     required this.matraID,
+//   });
+
+//   factory Word.fromMap(Map<String, dynamic> map) {
+//     return Word(
+//       id: map['id'],
+//       descrip: map['descrip'],
+//       contents: map['contents'] is List<int> ? map['contents'] : List<int>.from(map['contents']),
+//       matraID: map['matraID'],
+//     );
+//   }
 // }
-import 'package:flutter_application_0/database/database_helper.dart';
+import 'dart:typed_data';
 
 class Word {
-  final int id;
+  final int? id;
   final String descrip;
   final List<int> contents;
   final int matraID;
-  bool displayText;
 
   Word({
-    required this.id,
+    this.id,
     required this.descrip,
     required this.contents,
     required this.matraID,
-    this.displayText = false,
   });
 
-  factory Word.fromMap(Map<String, dynamic> map) => Word(
-    id: map[DatabaseHelper.columnId],
-    descrip: map[DatabaseHelper.columnDescrip],
-    contents: map[DatabaseHelper.columnContents],
-    matraID: map[DatabaseHelper.columnMatraID],
-  );
+  factory Word.fromMap(Map<String, dynamic> map) {
+    return Word(
+      id: map['id'],
+      descrip: map['descrip'],
+      contents: map['contents'] is List<int> ? map['contents'] : List<int>.from(map['contents']),
+      matraID: map['matraID'],
+    );
+  }
 }

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 class MatchedAnimation extends StatefulWidget {
-  const MatchedAnimation({
-  required this.child,
-  required this.animate,
-  required this.numberOfWordsAnswered,
-  Key? key,
-}) : super(key: key);
+  const MatchedAnimation(
+      {required this.child,
+      required this.animate,
+      required this.numberOfWordsAnswered,
+      Key? key})
+      : super(key: key);
 
   final Widget child;
   final bool animate;
@@ -47,8 +47,7 @@ class _MatchedAnimationState extends State<MatchedAnimation>
   }
 
   @override
-void didUpdateWidget(covariant MatchedAnimation oldWidget) {
-  if (widget.animate != oldWidget.animate) {
+  void didUpdateWidget(covariant MatchedAnimation oldWidget) {
     if (widget.animate) {
       if (!_correctColorIsSet) {
         if (widget.numberOfWordsAnswered == 4) {
@@ -57,34 +56,14 @@ void didUpdateWidget(covariant MatchedAnimation oldWidget) {
         if (widget.numberOfWordsAnswered == 6) {
           _correctColor = Colors.amber;
         }
-        if (widget.numberOfWordsAnswered == 8) {
-          _correctColor = Colors.blueAccent;
-        }
-        if (widget.numberOfWordsAnswered == 10) {
-          _correctColor = Colors.brown;
-        }
-        if (widget.numberOfWordsAnswered == 12) {
-          _correctColor = Colors.lightGreen;
-        }
-        if (widget.numberOfWordsAnswered == 16) {
-          _correctColor = Colors.purpleAccent;
-        }
-        if (_controller.status != AnimationStatus.forward) { // ตรวจสอบสถานะก่อนเล่น
-        _correctColorIsSet = true;
-        _controller.forward();
-        
-      } else {
-      _controller.reset();
-      _correctColorIsSet = false;
-    }
       }
-      super.didUpdateWidget(oldWidget);
-      // _correctColorIsSet = true;
-      // _controller.forward();
+
+      _correctColorIsSet = true;
+      _controller.forward();
     }
-    // super.didUpdateWidget(oldWidget);
+    super.didUpdateWidget(oldWidget);
   }
-}
+
   @override
   void dispose() {
     _controller.dispose();

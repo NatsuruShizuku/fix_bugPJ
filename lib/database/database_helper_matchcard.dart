@@ -1,14 +1,14 @@
 
-
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/services.dart';
+import 'package:flutter_application_0/models/word.dart';
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path_provider/path_provider.dart';
 
 class DatabaseHelper {
-  static final _databaseName = "word_card1.db";
+  static final _databaseName = "word_card3.db";
   static final _databaseVersion = 1;
 
   static final table = 'card';
@@ -70,6 +70,11 @@ class DatabaseHelper {
   //   Database db = await instance.database;
   //   return await db.insert(table, row);
   // }
+  static Future<List<Word>> getMatchedPairs() async {
+  final db = await instance.database;
+  final maps = await db.query(table);
+  return maps.map((map) => Word.fromMap(map)).toList();
+}
 
   Future<List<Map<String, dynamic>>> queryAllWords() async {
     Database db = await instance.database;

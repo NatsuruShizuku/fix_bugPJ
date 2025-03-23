@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_application_0/animation/confetti_animation.dart';
 import 'package:flutter_application_0/components/replay_popup.dart';
 import 'package:flutter_application_0/components/word_tile.dart';
-import 'package:flutter_application_0/database/database_helper.dart';
+import 'package:flutter_application_0/database/database_helper_matchcard.dart';
 import 'package:flutter_application_0/managers/game_manager.dart';
 import 'package:flutter_application_0/models/word.dart';
 import 'package:flutter_application_0/page/match_menu.dart';
@@ -32,7 +32,8 @@ class GamePage extends StatefulWidget {
 class _GamePageState extends State<GamePage> {
   Future<int>? _futureCachedImages;
   List<Word> _gridWords = [];
-  late final DatabaseHelper _dbHelper;
+  // late final DatabaseHelper _dbHelper;
+  late final DatabaseHelper _dbHelper = DatabaseHelper.instance;
   List<Word> sourceWords = [];
   late final GameManager _gameManager;
   bool _startPopupShown = false; // flag สำหรับตรวจสอบการแสดง popup เริ่มเกม
@@ -41,7 +42,7 @@ class _GamePageState extends State<GamePage> {
   void initState() {
     super.initState();
     _gameManager = GameManager(totalTiles: widget.rows * widget.columns);
-    _dbHelper = DatabaseHelper.instance;
+    // _dbHelper = DatabaseHelper.instance;
     _loadWordsFromDB().then((_) {
       _setUp();
       _futureCachedImages = _cacheImages();
@@ -51,6 +52,8 @@ class _GamePageState extends State<GamePage> {
   _loadWordsFromDB() async {
     try {
       List<Map<String, dynamic>> maps = await _dbHelper.queryAllWords();
+      sourceWords = maps.map((map) => Word.fromMap(map)).toList();
+      setState(() {});
       if (maps.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('ไม่พบข้อมูลในฐานข้อมูล')),
@@ -192,40 +195,86 @@ class _GamePageState extends State<GamePage> {
             Column(
               children: [
                 _buildStatsHeader(context),
+                // Expanded(
+                //   child: Padding(
+                //     padding: const EdgeInsets.all(16.0),
+                //     child: LayoutBuilder(
+                //       builder: (context, constraints) {
+                //         return GridView.builder(
+                //           physics: const NeverScrollableScrollPhysics(),
+                //           itemCount: _gridWords.length,
+                //           gridDelegate:
+                //               SliverGridDelegateWithFixedCrossAxisCount(
+                //             crossAxisCount: widget.columns,
+                //             childAspectRatio: 1,
+                //             mainAxisSpacing: 8,
+                //             crossAxisSpacing: 8,
+                //           ),
+                //           itemBuilder: (context, index) {
+                //             return Selector<GameManager, List<int>>(
+                //               selector: (_, gm) => gm.answeredWords,
+                //               builder: (_, answeredWords, __) {
+                //                 final isMatched = answeredWords.contains(index);
+                //                 return WordTile(
+                //                   key: ValueKey(index),
+                //                   index: index,
+                //                   word: _gridWords[index],
+                //                   isMatched: isMatched,
+                //                 );
+                //               },
+                //             );
+                //           },
+                //         );
+                //       },
+                //     ),
+                //   ),
+                // ),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        return GridView.builder(
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _gridWords.length,
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: widget.columns,
-                            childAspectRatio: 1,
-                            mainAxisSpacing: 8,
-                            crossAxisSpacing: 8,
-                          ),
-                          itemBuilder: (context, index) {
-                            return Selector<GameManager, List<int>>(
-                              selector: (_, gm) => gm.answeredWords,
-                              builder: (_, answeredWords, __) {
-                                final isMatched = answeredWords.contains(index);
-                                return WordTile(
-                                  key: ValueKey(index),
-                                  index: index,
-                                  word: _gridWords[index],
-                                  isMatched: isMatched,
+                        return Center(
+                          child: Container(
+                            // กำหนดความกว้างและความสูงสูงสุดตามที่ต้องการ
+                            width: constraints.maxWidth < 600
+                                ? constraints.maxWidth
+                                : 300,
+                            height: constraints.maxHeight < 600
+                                ? constraints.maxHeight
+                                : 300,
+                            child: GridView.builder(
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: _gridWords.length,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: widget.columns,
+                                childAspectRatio: 1,
+                                mainAxisSpacing: 8,
+                                crossAxisSpacing: 8,
+                              ),
+                              itemBuilder: (context, index) {
+                                return Selector<GameManager, List<int>>(
+                                  selector: (_, gm) => gm.answeredWords,
+                                  builder: (_, answeredWords, __) {
+                                    final isMatched =
+                                        answeredWords.contains(index);
+                                    return WordTile(
+                                      key: ValueKey(index),
+                                      index: index,
+                                      word: _gridWords[index],
+                                      isMatched: isMatched,
+                                    );
+                                  },
                                 );
                               },
-                            );
-                          },
+                            ),
+                          ),
                         );
                       },
                     ),
                   ),
-                ),
+                )
               ],
             ),
             if (roundCompleted)
@@ -259,142 +308,141 @@ class _GamePageState extends State<GamePage> {
       _gameManager.isPaused = true;
     });
 
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) => Dialog(
-      // ใช้ shape เพื่อกำหนดขอบโค้งมน
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      // ใช้ child เพื่อใส่ Widget หลัก
-      child: Container(
-        padding: EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.pink.shade300,
-              Colors.purple.shade400,
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        // ใช้ shape เพื่อกำหนดขอบโค้งมน
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        // ใช้ child เพื่อใส่ Widget หลัก
+        child: Container(
+          padding: EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                Colors.pink.shade300,
+                Colors.purple.shade400,
+              ],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 15,
+                spreadRadius: 5,
+              ),
             ],
           ),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 15,
-              spreadRadius: 5,
-            ),
-          ],
-        ),
-                  child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Title
-            Text(
-              'เกมหยุดชั่วคราว',
-              style: GoogleFonts.chakraPetch(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withOpacity(0.5),
-                    blurRadius: 5,
-                    offset: Offset(1, 2),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Title
+              Text(
+                'เกมหยุดชั่วคราว',
+                style: GoogleFonts.chakraPetch(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black.withOpacity(0.5),
+                      blurRadius: 5,
+                      offset: Offset(1, 2),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: 20),
+
+              // Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  // _buildFancyIconButton(
+                  //   icon: Icons.home,
+                  //   label: "หน้าหลัก",
+                  //   onTap: () {
+                  //     Navigator.push(
+                  //       // context,
+                  //       // MaterialPageRoute(builder: (context) => MatchMenu()),
+                  //     );
+                  //   },
+                  //   color: Colors.redAccent,
+                  // ),
+                  _buildFancyIconButton(
+                    icon: Icons.refresh,
+                    label: "เริ่มใหม่",
+                    onTap: () {
+                      Navigator.pop(context);
+                      _restartGame();
+                    },
+                    color: Colors.orangeAccent,
+                  ),
+                  _buildFancyIconButton(
+                    icon: Icons.play_arrow,
+                    label: "เล่นต่อ",
+                    onTap: () {
+                      setState(() => _gameManager.isPaused = false);
+                      Navigator.pop(context);
+                    },
+                    color: Colors.green,
                   ),
                 ],
               ),
-            ),
-            SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-            // Buttons
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildFancyIconButton(
-                  icon: Icons.home,
-                  label: "หน้าหลัก",
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => MatchMenu()),
-                    );
-                  },
-                  color: Colors.redAccent,
-                ),
-                _buildFancyIconButton(
-                  icon: Icons.refresh,
-                  label: "เริ่มใหม่",
-                  onTap: () {
-                    Navigator.pop(context);
-                    _restartGame();
-                  },
-                  color: Colors.orangeAccent,
-                ),
-                _buildFancyIconButton(
-                  icon: Icons.play_arrow,
-                  label: "เล่นต่อ",
-                  onTap: () {
-                    setState(() => _gameManager.isPaused = false);
-                    Navigator.pop(context);
-                  },
-                  color: Colors.green,
+  Widget _buildFancyIconButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required Color color,
+  }) {
+    return Column(
+      children: [
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(50),
+          child: Container(
+            padding: EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.8),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: color.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-
- Widget _buildFancyIconButton({
-  required IconData icon,
-  required String label,
-  required VoidCallback onTap,
-  required Color color,
-}) {
-  return Column(
-    children: [
-      InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(50),
-        child: Container(
-          padding: EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.8),
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: color.withOpacity(0.3),
-                blurRadius: 10,
-                offset: Offset(0, 4),
-              ),
-            ],
+            child: Icon(
+              icon,
+              size: 40,
+              color: Colors.white,
+            ),
           ),
-          child: Icon(
-            icon,
-            size: 40,
+        ),
+        SizedBox(height: 8),
+        Text(
+          label,
+          style: GoogleFonts.chakraPetch(
+            fontSize: 16,
             color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
         ),
-      ),
-      SizedBox(height: 8),
-      Text(
-        label,
-        style: GoogleFonts.chakraPetch(
-          fontSize: 16,
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    ],
-  );
-}
+      ],
+    );
+  }
 
   Widget _buildIconButton(
       IconData icon, String label, VoidCallback onTap, Color color) {
@@ -610,16 +658,16 @@ class StartGamePopup extends StatelessWidget {
             //   onPressed: () => Navigator.of(context).pop(),
             // ),
             child: Container(
-      decoration: BoxDecoration(
-        color: Colors.redAccent.withOpacity(0.9),
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
-      ),
-      child: IconButton(
-        icon: const Icon(Icons.close, color: Colors.black, size: 35),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-    ),
+              decoration: BoxDecoration(
+                color: Colors.redAccent.withOpacity(0.9),
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 2),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.black, size: 35),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
           ),
         ],
       ),
