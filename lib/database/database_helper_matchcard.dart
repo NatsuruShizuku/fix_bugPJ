@@ -76,6 +76,16 @@ class DatabaseHelper {
   return maps.map((map) => Word.fromMap(map)).toList();
 }
 
+static Future<List<Word>> getWordsByMatraID(int matraID) async {
+  final db = await instance.database;
+  final maps = await db.query(
+    table,
+    where: '$columnMatraID = ?',
+    whereArgs: [matraID],
+  );
+  return maps.map((map) => Word.fromMap(map)).toList();
+}
+
   Future<List<Map<String, dynamic>>> queryAllWords() async {
     Database db = await instance.database;
     return await db.query(table);

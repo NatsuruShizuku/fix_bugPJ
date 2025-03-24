@@ -1,9 +1,9 @@
-import 'package:audioplayers/audioplayers.dart';
+// import 'package:audioplayers/audioplayers.dart';
 
-class AudioManager {
-  static final player = AudioPlayer();
+// class AudioManager {
+//   static final player = AudioPlayer();
 
-  static Future playAudio(String audio) async {
-    await player.play(AssetSource('sounds/$audio.mp3'));
-  }
-}
+//   static Future playAudio(String audio) async {
+//     await player.play(AssetSource('sounds/$audio.mp3'));
+//   }
+// }
