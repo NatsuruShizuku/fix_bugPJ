@@ -15,8 +15,8 @@ class GameTimerMobile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.symmetric(
-        vertical: 20,
-        horizontal: 60,
+        vertical: 10,
+        horizontal: 30,
       ),
       elevation: 8,
       clipBehavior: Clip.antiAlias,
@@ -25,23 +25,24 @@ class GameTimerMobile extends StatelessWidget {
       ),
       color: Colors.red[700],
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(6.0),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const Expanded(
-              flex: 1,
+            Flexible(
+              fit: FlexFit.loose,
               child: Icon(
                 Icons.timer,
-                size: 40,
+                size: 30,
               ),
             ),
-            Expanded(
-              flex: 2,
+            Flexible(
+              fit: FlexFit.loose,
               child: Text(
                 textAlign: TextAlign.center,
                 _formatTime(time),
                 style: const TextStyle(
-                  fontSize: 28.0,
+                  fontSize: 22.0,
                   fontWeight: FontWeight.bold,
                 ),
               ),

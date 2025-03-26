@@ -3,20 +3,26 @@ import 'package:flutter/material.dart';
 class GameBestTimeMobile extends StatelessWidget {
   const GameBestTimeMobile({
     required this.bestTime,
+    required this.rows,
+    required this.cols,
     super.key,
   });
 
   final int bestTime;
-  String _formatBestTime(int seconds) => 
-    Duration(seconds: seconds).toString().split('.').first.padLeft(8, "0");
+  final int rows;
+  final int cols;
+
+  String _formatBestTime(int seconds) =>
+      Duration(seconds: seconds).toString().split('.').first.padLeft(8, "0");
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(
-        vertical: 50,
-        horizontal: 60,
-      ),
+      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+      // margin: const EdgeInsets.symmetric(
+      //   vertical: 50,
+      //   horizontal: 60,
+      // ),
       elevation: 8,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
@@ -24,34 +30,25 @@ class GameBestTimeMobile extends StatelessWidget {
       ),
       color: Colors.greenAccent[700],
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(6.0),
         child: Row(
+          mainAxisSize: MainAxisSize.min, // ลดการขยายของ Row
           children: [
-            const Expanded(
-              flex: 1,
-              child: Icon(
+            Flexible(
+              fit: FlexFit.loose,
+              child: const Icon(
                 Icons.celebration,
-                size: 40,
+                size: 30,
               ),
             ),
-            Expanded(
-              flex: 2,
-              // child: Text(
-              //   textAlign: TextAlign.center,
-              //   Duration(seconds: bestTime)
-              //       .toString()
-              //       .split('.')
-              //       .first
-              //       .padLeft(8, "0"),
-              //   style: const TextStyle(
-              //     fontSize: 28.0,
-              //     fontWeight: FontWeight.bold,
-              //   ),
-              // ),
+            SizedBox(width: 40,),
+            Flexible(
+              fit: FlexFit.loose,
               child: Text(
-        bestTime > 0 ? _formatBestTime(bestTime) : "--:--:--",
-        style: const TextStyle(
-                  fontSize: 28.0,
+                bestTime > 0 ? _formatBestTime(bestTime) : "--:--:--",
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 22.0,
                   fontWeight: FontWeight.bold,
                 ),
               ),

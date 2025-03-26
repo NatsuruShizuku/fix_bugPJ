@@ -22,14 +22,11 @@ class GameBoard extends StatefulWidget {
   State<GameBoard> createState() => _GameBoardState();
 }
 
-class _GameBoardState extends State<GameBoard>
-    with SingleTickerProviderStateMixin {
+class _GameBoardState extends State<GameBoard> {
   late List<bool> _revealedCards;
-  late List<bool> _matchedCards; // เพิ่มสถานะติดตามการจับคู่
+  late List<bool> _matchedCards;
   int? _selectedIndex;
   int _matchedPairs = 0;
-  late AnimationController _animationController;
-  final Map<int, bool> _isAnimating = {};
   late Duration _currentTime = Duration.zero;
   late Timer _gameTimer;
   int _bestTime = 0;
@@ -39,10 +36,6 @@ class _GameBoardState extends State<GameBoard>
     super.initState();
     _loadBestTime();
     _startTimer();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 300),
-    );
     _initializeGame();
   }
 
@@ -54,15 +47,19 @@ class _GameBoardState extends State<GameBoard>
     });
   }
 
+  String _getBestTimeKey() => 'best_time_${widget.rows}x${widget.cols}';
+
   Future<void> _loadBestTime() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() => _bestTime = prefs.getInt('best_time') ?? 0);
+    // setState(() => _bestTime = prefs.getInt('best_time') ?? 0);
+    setState(() => _bestTime = prefs.getInt(_getBestTimeKey()) ?? 0);
   }
 
   Future<void> _saveBestTime() async {
-    if (_bestTime == 0 || _currentTime.inSeconds < _bestTime) {
+    final currentBest = _bestTime;
+    if (currentBest == 0 || _currentTime.inSeconds < currentBest) {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('best_time', _currentTime.inSeconds);
+      await prefs.setInt(_getBestTimeKey(), _currentTime.inSeconds);
       setState(() => _bestTime = _currentTime.inSeconds);
     }
   }
@@ -72,45 +69,25 @@ class _GameBoardState extends State<GameBoard>
     _matchedCards = List<bool>.filled(widget.words.length, false);
     _selectedIndex = null;
     _matchedPairs = 0;
-    _isAnimating.clear();
   }
 
   Future<void> _handleCardTap(int index) async {
-    if (_revealedCards[index] || _isAnimating[index] == true) return;
+    // หากการ์ดถูกเปิดหรือจับคู่แล้ว ให้ไม่ทำอะไร
+    if (_revealedCards[index] || _matchedCards[index]) return;
 
-    _isAnimating[index] = true;
-    await _animationController.forward();
-
-    if (!mounted) return;
-    setState(() => _revealedCards[index] = true);
+    setState(() {
+      _revealedCards[index] = true;
+    });
 
     if (_selectedIndex == null) {
       _selectedIndex = index;
     } else {
-      // final first = widget.words[_selectedIndex!];
-      // final second = widget.words[index];
       final firstIndex = _selectedIndex!;
       final secondIndex = index;
       final isMatched =
           widget.words[firstIndex].matraID == widget.words[secondIndex].matraID;
 
-      // if (first.matraID == second.matraID) {
-      //   _matchedPairs++;
-      //   _selectedIndex = null;
-      //   if (_matchedPairs == widget.words.length ~/ 2) {
-      //     _showGameOverDialog();
-      //   }
-      // } else {
-      //   await Future.delayed(const Duration(milliseconds: 800));
-      //   if (!mounted) return;
-      //   setState(() {
-      //     _revealedCards[_selectedIndex!] = false;
-      //     _revealedCards[index] = false;
-      //     _selectedIndex = null;
-      //   });
-      // }
       if (isMatched) {
-        // ตั้งค่าการ์ดที่จับคู่สำเร็จ
         setState(() {
           _matchedCards[firstIndex] = true;
           _matchedCards[secondIndex] = true;
@@ -121,18 +98,16 @@ class _GameBoardState extends State<GameBoard>
           _showGameOverDialog();
         }
       } else {
+        // รอให้ผู้เล่นเห็นการ์ดทั้งสองก่อนกลับหน้าคว่ำ
         await Future.delayed(const Duration(milliseconds: 800));
         if (!mounted) return;
         setState(() {
           _revealedCards[firstIndex] = false;
           _revealedCards[secondIndex] = false;
+          _selectedIndex = null;
         });
       }
-      _selectedIndex = null;
     }
-
-    await _animationController.reverse();
-    _isAnimating[index] = false;
   }
 
   void _showGameOverDialog() {
@@ -144,13 +119,6 @@ class _GameBoardState extends State<GameBoard>
         title: const Text('เกมจบ!'),
         content: const Text('คุณทำได้ดีมาก!'),
         actions: [
-          // TextButton(
-          //   onPressed: () {
-          //     Navigator.pop(context);
-          //     _initializeGame();
-          //   },
-          //   child: const Text('เล่นอีกครั้ง'),
-          // ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
@@ -170,134 +138,102 @@ class _GameBoardState extends State<GameBoard>
   @override
   void dispose() {
     _gameTimer.cancel();
-    _animationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('บอร์ด ${widget.rows}x${widget.cols}'),
-      ),
-      // body: GridView.builder(
-      //   padding: const EdgeInsets.all(16),
-      //   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-      //     crossAxisCount: widget.cols,
-      //     crossAxisSpacing: 8,
-      //     mainAxisSpacing: 8,
-      //     childAspectRatio: 0.8,
-      //   ),
-      //   itemCount: widget.words.length,
-      //   itemBuilder: (context, index) {
-      //     return AnimatedBuilder(
-      //       animation: _animationController,
-      //       builder: (context, child) {
-      //         if (_matchedCards[index]) {
-      //           return child!;
-      //         }
-      //         return GestureDetector(
-      //           onTap: () => _handleCardTap(index),
-      //           child: Transform(
-      //             transform: Matrix4.identity()
-      //               ..setEntry(3, 2, 0.001)
-      //               ..rotateY(_animationController.value * 3.1416),
-      //             alignment: Alignment.center,
-      //             child: child,
-      //           ),
-      //         );
-      //       },
-      //       child: _MemoryCard(
-      //         revealed: _revealedCards[index],
-      //         content: widget.words[index].contents,
-      //         isMatched: _matchedCards[index],
-      //       ),
-      //     );
-      //   },
+      // appBar: AppBar(
+      //   title: Text('บอร์ด ${widget.rows}x${widget.cols}'),
       // ),
       body: Column(
         children: [
           // ตัวนับเวลาปัจจุบัน
           GameTimerMobile(time: _currentTime),
-
-          // กริดเกม
+          // กริดเกมให้อยู่ตรงกลางหน้าจอ
           Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: widget.cols,
-                crossAxisSpacing: 8,
-                mainAxisSpacing: 8,
-                childAspectRatio: 0.8,
+            child: Center(
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  double gridPadding = 16 * 2; // padding ซ้ายขวา
+                  double availableWidth = constraints.maxWidth - gridPadding;
+                  double spacing = 8;
+                  double totalSpacing = spacing * (widget.cols - 1);
+                  double cardWidth =
+                      (availableWidth - totalSpacing) / widget.cols;
+                  // กำหนด childAspectRatio ตามที่ต้องการ (เช่น 0.8)
+                  double cardHeight = cardWidth / 0.8;
+                  return GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(16),
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: widget.cols,
+                      crossAxisSpacing: spacing,
+                      mainAxisSpacing: spacing,
+                      childAspectRatio: cardWidth / cardHeight,
+                    ),
+                    itemCount: widget.words.length,
+                    itemBuilder: (context, index) {
+                      return GestureDetector(
+                        onTap: () => _handleCardTap(index),
+                        child: TweenAnimationBuilder<double>(
+                          tween: Tween<double>(
+                            begin: 0,
+                            end: _revealedCards[index] ? 1 : 0,
+                          ),
+                          duration: const Duration(milliseconds: 300),
+                          builder: (context, value, child) {
+                            double angle = value * 3.1416;
+                            // หากผ่านครึ่งแล้วให้กลับด้านให้ถูกต้อง (ไม่กลับกระจก)
+                            if (value >= 0.5) {
+                              return Transform(
+                                transform: Matrix4.identity()
+                                  ..setEntry(3, 2, 0.001)
+                                  ..rotateY(angle - 3.1416),
+                                alignment: Alignment.center,
+                                child: child,
+                              );
+                            } else {
+                              return Transform(
+                                transform: Matrix4.identity()
+                                  ..setEntry(3, 2, 0.001)
+                                  ..rotateY(angle),
+                                alignment: Alignment.center,
+                                child: child,
+                              );
+                            }
+                          },
+                          child: _MemoryCard(
+                            revealed: _revealedCards[index],
+                            content: widget.words[index].contents,
+                            isMatched: _matchedCards[index],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
-              itemCount: widget.words.length,
-              itemBuilder: (context, index) {
-                return AnimatedBuilder(
-                  animation: _animationController,
-                  builder: (context, child) {
-                    if (_matchedCards[index]) {
-                      return child!;
-                    }
-                    return GestureDetector(
-                      onTap: () => _handleCardTap(index),
-                      child: Transform(
-                        transform: Matrix4.identity()
-                          ..setEntry(3, 2, 0.001)
-                          ..rotateY(_animationController.value * 3.1416),
-                        alignment: Alignment.center,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: _MemoryCard(
-                    revealed: _revealedCards[index],
-                    content: widget.words[index].contents,
-                    isMatched: _matchedCards[index],
-                  ),
-                );
-              },
             ),
           ),
-
-          // เวลาดีที่สุด
-          GameBestTimeMobile(bestTime: _bestTime),
+          // ปรับ UI ของ BestTime ให้อยู่ในพื้นที่ที่เหมาะสม
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+            margin: const EdgeInsets.only(bottom: 16),
+            child: FittedBox(
+              child: GameBestTimeMobile(
+                bestTime: _bestTime,
+                rows: widget.rows,
+                cols: widget.cols,
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
-  //   @override
-  // Widget build(BuildContext context) {
-  //   return Scaffold(
-  //     body: GridView.builder(
-  //       itemBuilder: (context, index) {
-  //         return AnimatedBuilder(
-  //           animation: _animationController,
-  //           builder: (context, child) {
-  //             // ไม่แสดง Animation ถ้าการ์ดถูกจับคู่
-  //             if (_matchedCards[index]) {
-  //               return child!;
-  //             }
-  //             return GestureDetector(
-  //               onTap: () => _handleCardTap(index),
-  //               child: Transform(
-  //                 transform: Matrix4.identity()
-  //                   ..setEntry(3, 2, 0.001)
-  //                   ..rotateY(_animationController.value * 3.1416),
-  //                 alignment: Alignment.center,
-  //                 child: child,
-  //               ),
-  //             );
-  //           },
-  //           child: _MemoryCard(
-  //             revealed: _matchedCards[index] || _revealedCards[index],
-  //             content: widget.words[index].contents,
-  //             isMatched: _matchedCards[index], // ส่งสถานะการจับคู่
-  //           ),
-  //         );
-  //       },
-  //     ),
-  //   );
-  // }
 }
 
 class _MemoryCard extends StatelessWidget {
@@ -311,28 +247,11 @@ class _MemoryCard extends StatelessWidget {
     required this.content,
   });
 
-//   @override
-//   Widget build(BuildContext context) {
-//     return Card(
-//       elevation: 4,
-//       shape: RoundedRectangleBorder(
-//         borderRadius: BorderRadius.circular(10),
-//       ),
-//       child: AnimatedSwitcher(
-//         duration: const Duration(milliseconds: 300),
-//         child: revealed
-//             ? _CardFace(content: content)
-//             : const _CardBack(),
-//       ),
-//     );
-//   }
-// }
   @override
   Widget build(BuildContext context) {
     return Card(
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
-        // ปิดการ Animation ถ้าจับคู่แล้ว
         switchInCurve: isMatched ? Curves.easeIn : Curves.easeInOut,
         switchOutCurve: isMatched ? Curves.easeOut : Curves.easeInOut,
         child: revealed
@@ -351,26 +270,9 @@ class _CardFace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // return Container(
-    //   decoration: BoxDecoration(
-    //     borderRadius: BorderRadius.circular(10),
-    //     color: Colors.white,
-    //   ),
-    //   child: Center(
-    //     child: Image.memory(
-    //       content,
-    //       cacheWidth: 150,
-    //       cacheHeight: 150,
-    //       fit: BoxFit.contain,
-    //     ),
-    //   ),
-    // );
     return Container(
       decoration: BoxDecoration(
-        border: isMatched
-            ? Border.all(
-                color: Colors.green, width: 3) // เน้นการ์ดที่จับคู่แล้ว
-            : null,
+        border: isMatched ? Border.all(color: Colors.green, width: 3) : null,
       ),
       child: Image.memory(
         content,
