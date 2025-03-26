@@ -17,12 +17,13 @@ class GameBestTimeMobile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
     return Card(
-      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
-      // margin: const EdgeInsets.symmetric(
-      //   vertical: 50,
-      //   horizontal: 60,
-      // ),
+      // margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 30),
+      margin: EdgeInsets.symmetric(
+      vertical: isPortrait ? 10 : 5,
+      horizontal: isPortrait ? 30 : 15,
+    ),
       elevation: 8,
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(
@@ -30,28 +31,28 @@ class GameBestTimeMobile extends StatelessWidget {
       ),
       color: Colors.greenAccent[700],
       child: Padding(
-        padding: const EdgeInsets.all(6.0),
-        child: Row(
+        // padding: const EdgeInsets.all(6.0),
+        padding: EdgeInsets.all(isPortrait ? 8.0 : 4.0),
+        child: Column(
           mainAxisSize: MainAxisSize.min, // ลดการขยายของ Row
           children: [
-            Flexible(
-              fit: FlexFit.loose,
-              child: const Icon(
-                Icons.celebration,
-                size: 30,
-              ),
+            Text(
+              '${rows}x${cols}',
+              style: TextStyle(fontSize: 16, color: Colors.white),
             ),
-            SizedBox(width: 40,),
-            Flexible(
-              fit: FlexFit.loose,
-              child: Text(
-                bestTime > 0 ? _formatBestTime(bestTime) : "--:--:--",
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 22.0,
-                  fontWeight: FontWeight.bold,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // const Icon(Icons.celebration, size: 24),
+                // const SizedBox(width: 8),
+                Icon(Icons.timer, size: isPortrait ? 24 : 20),
+          SizedBox(width: isPortrait ? 8 : 4),
+                Text(
+                  bestTime > 0 ? _formatBestTime(bestTime) : "--:--:--",
+                  // style: const TextStyle(fontSize: 20.0),
+                  style: TextStyle(fontSize: isPortrait ? 20.0 : 16.0),
                 ),
-              ),
+              ],
             ),
           ],
         ),

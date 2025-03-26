@@ -1,67 +1,19 @@
-// import 'package:flutter/material.dart';
-// import 'package:flutter/services.dart';
-// import 'package:flutter_application_0/database/database_helper_matchcard.dart';
-// import 'package:flutter_application_0/managers/game_manager.dart';
-// import 'package:flutter_application_0/models/word.dart';
-// import 'package:flutter_application_0/page/error_page.dart';
-// import 'package:flutter_application_0/page/game_page.dart';
-// import 'package:flutter_application_0/page/loading_page.dart';
-// import 'package:flutter_application_0/theme/app_theme.dart';
-
-// import 'package:provider/provider.dart';
-
-
-
-// List<Word> sourceWords = [];
-
-// Future main() async {
-//   WidgetsFlutterBinding.ensureInitialized();
-//   SystemChrome.setPreferredOrientations(
-//       [DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight]);
-
-//   runApp(
-//     MaterialApp(
-//       home: FutureBuilder(
-//         future: DatabaseHelper.instance.queryAllWords(),
-//         builder: (context, snapshot) {
-//           if (snapshot.hasError) return ErrorPage();
-//           if (snapshot.hasData) {
-//             sourceWords = snapshot.data!.map((map) => Word.fromMap(map)).toList();
-//             return ChangeNotifierProvider(
-//               create: (_) => GameManager(totalTiles: 2 * 3),
-//               child: GamePage(rows: 2, columns: 3), // กำหนด rows และ columns ตามต้องการ
-//             );
-//           }
-//           return LoadingPage();
-//         },
-//       ),
-//     ),
-//   );
-// }
-
-// class MyApp extends StatelessWidget {
-//   const MyApp({Key? key}) : super(key: key);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       debugShowCheckedModeBanner: false,
-//       title: 'Memory Game',
-//       theme: appTheme,
-//       home: Material(
-//           child: ChangeNotifierProvider(
-//               create: (_) => GameManager(totalTiles: 2 * 3), child: const GamePage(rows: 2, columns: 3,))),
-//     );
-//   }
-// }
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_application_0/models/word.dart';
 import 'package:flutter_application_0/new/gameboard.dart';
 import 'package:flutter_application_0/new/gamehelper.dart';
 
 void main() {
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight,
+  ]).then((_) {
+    runApp(const MyApp());
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -80,6 +32,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+
 class MainMenu extends StatefulWidget {
   const MainMenu({super.key});
 
@@ -90,16 +43,22 @@ class MainMenu extends StatefulWidget {
 class _MainMenuState extends State<MainMenu> {
   @override
   Widget build(BuildContext context) {
+    final isPortrait = MediaQuery.of(context).orientation == Orientation.portrait;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('เลือกขนาดบอร์ด'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        // padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(isPortrait ? 16.0 : 8.0),
         child: GridView.count(
-          crossAxisCount: 2,
-          mainAxisSpacing: 16,
-          crossAxisSpacing: 16,
+          // crossAxisCount: 2,
+          // mainAxisSpacing: 16,
+          // crossAxisSpacing: 16,
+          crossAxisCount: isPortrait ? 2 : 4,
+          mainAxisSpacing: isPortrait ? 16 : 8,
+          crossAxisSpacing: isPortrait ? 16 : 8,
           children: [
             _buildSizeButton('2x2', 2, 2),
             _buildSizeButton('2x3', 2, 3),
